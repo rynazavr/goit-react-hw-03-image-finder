@@ -3,12 +3,16 @@ import styles from "./Modal.module.css";
 
 export default class Modal extends Component {
   componentDidMount() {
-    window.addEventListener("keydown", (e) => {
-      if (e.code === "Escape") {
-        this.props.onClose();
-      }
-    });
+    window.addEventListener("keydown", this.handleKeyDown);
   }
+  componentWillMount() {
+    window.removeEventListener("keydown", this.handleKeyDown);
+  }
+  handleKeyDown = (e) => {
+    if (e.code === "Escape") {
+      this.props.onClose();
+    }
+  };
   render() {
     return (
       <div className={styles.Overlay} onClick={this.props.onClose} alt="">
