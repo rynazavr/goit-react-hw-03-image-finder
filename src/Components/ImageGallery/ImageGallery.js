@@ -4,7 +4,7 @@ import Button from "../Button/Button";
 import ImageGalleryItem from "../ImageGalleryItem/ImageGalleryItem";
 import imagesApi from "../../helpers/request";
 import styles from "./ImageGallery.module.css";
-import Loader from "react-loader-spinner";
+// import Loader from "react-loader-spinner";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import Modal from "../Modal/Modal";
 
@@ -34,6 +34,12 @@ class ImageGallery extends Component {
   };
 
   fetchImages = (query, page) => {
+    let scrollHeight = 0;
+    if (page === 1) {
+      scrollHeight = 0;
+    } else {
+      scrollHeight = document.documentElement.scrollHeight - 144;
+    }
     console.log("query", query);
     imagesApi
       .fetchImagesWithQuery(query, page)
@@ -46,30 +52,23 @@ class ImageGallery extends Component {
       )
       .catch((error) => this.setState({ error }))
       .finally(() => this.setState({ loader: false }));
+    window.scrollTo({
+      top: scrollHeight,
+      behavior: "smooth",
+    });
   };
   handleSearchFormSubmit = (query) => {
     console.log(query);
-    this.setState({ searchQuery: query, page: 0, images: [] });
+    this.setState({ searchQuery: query, page: 1, images: [] });
   };
   componentDidUpdate(prevProps, prevState) {
+    const { searchQuery, page } = this.state;
     const prevQuery = prevState.searchQuery;
     const nextQuery = this.state.searchQuery;
-    console.log("nextQuery", nextQuery);
-    console.log("prevQuery", prevQuery);
-    if (prevQuery !== nextQuery) {
-      // this.fetchImages(nextQuery);
+    if (prevQuery !== nextQuery || prevState.page !== page) {
+      this.fetchImages(nextQuery, page);
     }
   }
-
-  // async componentDidMount() {
-  //   const url = withCredentials(`https://pixabay.com/`);
-  //   try {
-  //     const result = await request(url);
-  //     this.setState({ images: result.hits, loader: false });
-  //   } catch (error) {
-  //     this.setState({ error: true, loader: false });
-  //   }
-  // }
 
   render() {
     const { images, loader, error, showModal, imageModal } = this.state;
@@ -82,7 +81,6 @@ class ImageGallery extends Component {
           onSubmit={this.handleSearchFormSubmit}
           fetchImages={this.fetchImages}
         />
-
         <ul className={styles.ImageGallery}>
           {images.map((image) => (
             <ImageGalleryItem
@@ -92,6 +90,7 @@ class ImageGallery extends Component {
             />
           ))}
         </ul>
+
         {!!images.length && <Button onSomething={this.fetchImages} />}
         {showModal && (
           <Modal imageModal={imageModal} onClose={this.toggleModalClose} />
