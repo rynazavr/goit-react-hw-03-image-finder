@@ -19,19 +19,16 @@ class ImageGallery extends Component {
     imageModal: "",
   };
 
-  toggleModal = (largeImage) => {
-    this.setState((state) => ({
-      showModal: !state.showModal,
-      imageModal: largeImage,
-    }));
-  };
-
-  toggleModalClose = () => {
-    this.setState((state) => ({
-      showModal: !state.showModal,
-      imageModal: "",
-    }));
-  };
+  componentDidUpdate(prevProps, prevState) {
+    const { searchQuery, page } = this.state;
+    const prevQuery = prevState.searchQuery;
+    const nextQuery = this.state.searchQuery;
+    if (prevQuery !== nextQuery) {
+      this.fetchImages(nextQuery);
+      // if (prevQuery !== nextQuery || prevState.page !== page) {
+      //   this.fetchImages(nextQuery, page);
+    }
+  }
 
   fetchImages = (query, page) => {
     let scrollHeight = 0;
@@ -40,7 +37,6 @@ class ImageGallery extends Component {
     } else {
       scrollHeight = document.documentElement.scrollHeight - 144;
     }
-    console.log("query", query);
     imagesApi
       .fetchImagesWithQuery(query, page)
       .then((images) =>
@@ -61,15 +57,19 @@ class ImageGallery extends Component {
     console.log(query);
     this.setState({ searchQuery: query, page: 1, images: [] });
   };
-  componentDidUpdate(prevProps, prevState) {
-    const { searchQuery, page } = this.state;
-    const prevQuery = prevState.searchQuery;
-    const nextQuery = this.state.searchQuery;
-    if (prevQuery !== nextQuery || prevState.page !== page) {
-      this.fetchImages(nextQuery, page);
-    }
-  }
+  toggleModal = (largeImage) => {
+    this.setState((state) => ({
+      showModal: !state.showModal,
+      imageModal: largeImage,
+    }));
+  };
 
+  toggleModalClose = () => {
+    this.setState((state) => ({
+      showModal: !state.showModal,
+      imageModal: "",
+    }));
+  };
   render() {
     const { images, loader, error, showModal, imageModal } = this.state;
     if (error) {
