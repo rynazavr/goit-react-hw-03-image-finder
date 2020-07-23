@@ -19,26 +19,33 @@ class ImageGallery extends Component {
     imageModal: "",
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const { searchQuery, page } = this.state;
-    const prevQuery = prevState.searchQuery;
-    const nextQuery = this.state.searchQuery;
-    if (prevQuery !== nextQuery) {
-      this.fetchImages(nextQuery);
-      // if (prevQuery !== nextQuery || prevState.page !== page) {
-      //   this.fetchImages(nextQuery, page);
-    }
-  }
+  handleChange = (e) => {
+    this.setState({ searchQuery: e.target.value });
+  };
+  handleSubmit = (e) => {
+    e.preventDefault();
+    this.fetchImages(this.state.searchQuery);
+  };
+  // componentDidUpdate(prevProps, prevState) {
+  //   const { searchQuery, page } = this.state;
+  //   const prevQuery = prevState.searchQuery;
+  //   const nextQuery = this.state.searchQuery;
+  //   if (prevQuery !== nextQuery) {
+  //     this.fetchImages(nextQuery);
+  //     // if (prevQuery !== nextQuery || prevState.page !== page) {
+  //     //   this.fetchImages(nextQuery, page);
+  //   }
+  // }
 
-  fetchImages = (query, page) => {
+  fetchImagesLoadMore = () => {
     let scrollHeight = 0;
-    if (page === 1) {
+    if (this.state.page === 1) {
       scrollHeight = 0;
     } else {
       scrollHeight = document.documentElement.scrollHeight - 144;
     }
     imagesApi
-      .fetchImagesWithQuery(query, page)
+      .fetchImagesWithQuery(this.state.searchQuery, this.state.page)
       .then((images) =>
         this.setState((prevState) => ({
           images: [...prevState.images, ...images],
@@ -53,10 +60,27 @@ class ImageGallery extends Component {
       behavior: "smooth",
     });
   };
-  handleSearchFormSubmit = (query) => {
-    console.log(query);
-    this.setState({ searchQuery: query, page: 1, images: [] });
+
+  ///////////*** */
+
+  fetchImages = () => {
+    let scrollHeight = 0;
+    if (this.state.page === 1) {
+      scrollHeight = 0;
+    } else {
+      scrollHeight = document.documentElement.scrollHeight - 144;
+    }
+    imagesApi
+      .fetchImagesWithQuery(this.state.searchQuery, this.state.page)
+      .then((images) => this.setState({ images, page: 2 }))
+      .catch((error) => this.setState({ error }))
+      .finally(() => this.setState({ loader: false }));
+    window.scrollTo({
+      top: scrollHeight,
+      behavior: "smooth",
+    });
   };
+
   toggleModal = (largeImage) => {
     this.setState((state) => ({
       showModal: !state.showModal,
@@ -71,15 +95,23 @@ class ImageGallery extends Component {
     }));
   };
   render() {
-    const { images, loader, error, showModal, imageModal } = this.state;
+    const {
+      images,
+      loader,
+      error,
+      showModal,
+      imageModal,
+      searchQuery,
+    } = this.state;
     if (error) {
       return <h1>Woops, something went wrong. Try again later!</h1>;
     }
     return (
       <>
         <Searchbar
-          onSubmit={this.handleSearchFormSubmit}
-          fetchImages={this.fetchImages}
+          handleChange={this.handleChange}
+          handleSubmit={this.handleSubmit}
+          searchQuery={searchQuery}
         />
         <ul className={styles.ImageGallery}>
           {images.map((image) => (
@@ -91,7 +123,7 @@ class ImageGallery extends Component {
           ))}
         </ul>
 
-        {!!images.length && <Button onSomething={this.fetchImages} />}
+        {!!images.length && <Button onSomething={this.fetchImagesLoadMore} />}
         {showModal && (
           <Modal imageModal={imageModal} onClose={this.toggleModalClose} />
         )}
